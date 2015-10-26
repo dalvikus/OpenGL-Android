@@ -23,6 +23,8 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
 
+////import android.os.SystemClock;
+
 /**
  * Provides drawing instructions for a GLSurfaceView object. This class
  * must override the OpenGL ES drawing lifecycle methods:
@@ -79,6 +81,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // long time = SystemClock.uptimeMillis() % 4000L;
         // float angle = 0.090f * ((int) time);
 
+////    long time = SystemClock.uptimeMillis() % 4000L;
+////    float angle = 0.090f * ((int) time);
+////    mAngle = angle;
         Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
 
         // Combine the rotation matrix with the projection and camera view

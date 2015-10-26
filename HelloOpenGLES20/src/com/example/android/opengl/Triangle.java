@@ -53,6 +53,8 @@ public class Triangle {
 
     // number of coordinates per vertex in this array
     static final int COORDS_PER_VERTEX = 3;
+    // not exact "equilateral triangle" but "isosceles triangle"
+    // 1.06, 1.06, 1
     static float triangleCoords[] = {
             // in counterclockwise order:
             0.0f,  0.622008459f, 0.0f,   // top
@@ -112,6 +114,7 @@ public class Triangle {
         GLES20.glEnableVertexAttribArray(mPositionHandle);
 
         // Prepare the triangle coordinate data
+////  public static void glVertexAttribPointer (int indx, int size, int type, boolean normalized, int stride, Buffer ptr)
         GLES20.glVertexAttribPointer(
                 mPositionHandle, COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
@@ -121,6 +124,7 @@ public class Triangle {
         mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
 
         // Set color for drawing the triangle
+////  public static void glUniform4iv (int location, int count, int[] v, int offset)
         GLES20.glUniform4fv(mColorHandle, 1, color, 0);
 
         // get handle to shape's transformation matrix
@@ -128,10 +132,12 @@ public class Triangle {
         MyGLRenderer.checkGlError("glGetUniformLocation");
 
         // Apply the projection and view transformation
+////  public static void glUniformMatrix4fv (int location, int count, boolean transpose, float[] value, int offset)
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
         MyGLRenderer.checkGlError("glUniformMatrix4fv");
 
         // Draw the triangle
+////  public static void glDrawArrays (int mode, int first, int count)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount);
 
         // Disable vertex array

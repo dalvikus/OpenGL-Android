@@ -120,6 +120,7 @@ public class Square {
         GLES20.glEnableVertexAttribArray(mPositionHandle);
 
         // Prepare the triangle coordinate data
+////  public static void glVertexAttribPointer (int indx, int size, int type, boolean normalized, int stride, Buffer ptr)
         GLES20.glVertexAttribPointer(
                 mPositionHandle, COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
@@ -129,6 +130,7 @@ public class Square {
         mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
 
         // Set color for drawing the triangle
+////  public static void glUniform4iv (int location, int count, int[] v, int offset)
         GLES20.glUniform4fv(mColorHandle, 1, color, 0);
 
         // get handle to shape's transformation matrix
@@ -136,10 +138,12 @@ public class Square {
         MyGLRenderer.checkGlError("glGetUniformLocation");
 
         // Apply the projection and view transformation
+////  public static void glUniformMatrix4fv (int location, int count, boolean transpose, float[] value, int offset)
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
         MyGLRenderer.checkGlError("glUniformMatrix4fv");
 
         // Draw the square
+////  public static void glDrawElements (int mode, int count, int type, Buffer indices)
         GLES20.glDrawElements(
                 GLES20.GL_TRIANGLES, drawOrder.length,
                 GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
