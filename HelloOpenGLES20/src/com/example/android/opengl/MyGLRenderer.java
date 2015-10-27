@@ -49,6 +49,12 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private float mAngle;
     public float mAngleX;
     public float mAngleY;
+    private Square mSquare1;
+    private Square mSquare2;
+    private Square mSquare3;
+    private Square mSquare4;
+    private Square mSquare5;
+    private Square mSquare6;
 
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
@@ -58,11 +64,67 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         mTriangle = new Triangle();
         mSquare   = new Square();
+
+        // front
+        float[] squareCoords1 = {
+            -0.5f,  0.5f, 0.5f,   // top left
+            -0.5f, -0.5f, 0.5f,   // bottom left
+             0.5f, -0.5f, 0.5f,   // bottom right
+             0.5f,  0.5f, 0.5f    // top right
+        };
+        float[] color1 = {1.0f, 0.0f, 0.0f, 1.0f};
+        mSquare1 = new Square(squareCoords1, color1);
+        // back
+        float[] squareCoords2 = {
+             0.5f,  0.5f, -0.5f,   // top left
+             0.5f, -0.5f, -0.5f,   // bottom left
+            -0.5f, -0.5f, -0.5f,   // bottom right
+            -0.5f,  0.5f, -0.5f    // top right
+        };
+        float[] color2 = {1.0f, 1.0f, 0.0f, 1.0f};
+        mSquare2 = new Square(squareCoords2, color2);
+        // left
+        float[] squareCoords3 = {
+            -0.5f,  0.5f, -0.5f,   // top left
+            -0.5f, -0.5f, -0.5f,   // bottom left
+            -0.5f, -0.5f,  0.5f,   // bottom right
+            -0.5f,  0.5f,  0.5f    // top right
+        };
+        float[] color3 = {0.0f, 1.0f, 0.0f, 1.0f};
+        mSquare3 = new Square(squareCoords3, color3);
+        // right
+        float[] squareCoords4 = {
+             0.5f,  0.5f,  0.5f,   // top left
+             0.5f, -0.5f,  0.5f,   // bottom left
+             0.5f, -0.5f, -0.5f,   // bottom right
+             0.5f,  0.5f, -0.5f    // top right
+        };
+        float[] color4 = {0.0f, 1.0f, 1.0f, 1.0f};
+        mSquare4 = new Square(squareCoords4, color4);
+        // top
+        float[] squareCoords5 = {
+            -0.5f,  0.5f, -0.5f,   // top left
+            -0.5f,  0.5f,  0.5f,   // bottom left
+             0.5f,  0.5f,  0.5f,   // bottom right
+             0.5f,  0.5f, -0.5f    // top right
+        };
+        float[] color5 = {0.0f, 0.0f, 1.0f, 1.0f};
+        mSquare5 = new Square(squareCoords5, color5);
+        // bottom
+        float[] squareCoords6 = {
+            -0.5f, -0.5f,  0.5f,   // top left
+            -0.5f, -0.5f, -0.5f,   // bottom left
+             0.5f, -0.5f, -0.5f,   // bottom right
+             0.5f, -0.5f,  0.5f    // top right
+        };
+        float[] color6 = {1.0f, 0.0f, 1.0f, 1.0f};
+        mSquare6 = new Square(squareCoords6, color6);
+
         GLES20.glEnable(GLES20.GL_CULL_FACE);
 //      GLES20.glFrontFace(GLES20.GL_CCW);
 //      GLES20.glFrontFace(GLES20.GL_CW);
-        GLES20.glCullFace(GLES20.GL_FRONT);
-//      GLES20.glCullFace(GLES20.GL_BACK);
+//      GLES20.glCullFace(GLES20.GL_FRONT);
+        GLES20.glCullFace(GLES20.GL_BACK);
     }
 
     @Override
@@ -76,7 +138,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 ////    Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
         Matrix.setLookAtM(
             mViewMatrix, 0,     // matrix, offset
-            0, 0, +3,           // (eyeX, eyeY, eyeZ)
+            0, 0, +5,           // (eyeX, eyeY, eyeZ)
             0f, 0f, 0f,         // (centerX, centerY, centerZ)
             0f, 1.0f, 0.0f      // (upX, upY, upZ)
         );
@@ -85,7 +147,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
         // Draw square
-//      mSquare.draw(mMVPMatrix);
+////    mSquare.draw(mMVPMatrix);
 
         // Create a rotation for the triangle
 
@@ -105,6 +167,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // for the matrix multiplication product to be correct.
         Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mRotationMatrix, 0);
  */
+//      mAngleX = angle;
+ //     mAngleY = 0.0f;
         float[] mRX = new float[16];
         Matrix.setRotateM(mRX, 0, mAngleX, 0.0f, 1.0f, 0.0f);
         printMatrix(mRX, "mRX");
@@ -119,14 +183,20 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 //      printMatrix(mR2, "mR2");
         float[] mT = new float[16];
         Matrix.setIdentityM(mT, 0);
-        Matrix.translateM(mT, 0, 0.5f, 0.0f, -2.5f);
+        Matrix.translateM(mT, 0, 0.0f, 0.0f, -0.0f);
         printMatrix(mT, "mT");
         float[] m = new float[16];
         Matrix.multiplyMM(m, 0, mT, 0, mR, 0);  // mT x mR; rotation first
         Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, m, 0);
 
         // Draw triangle
-        mTriangle.draw(scratch);
+////    mTriangle.draw(scratch);
+        mSquare1.draw(scratch);
+        mSquare2.draw(scratch);
+        mSquare3.draw(scratch);
+        mSquare4.draw(scratch);
+        mSquare5.draw(scratch);
+        mSquare6.draw(scratch);
     }
     static void printMatrix(float[] m, String name)
     {
