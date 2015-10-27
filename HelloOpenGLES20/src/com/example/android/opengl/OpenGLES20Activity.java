@@ -1,3 +1,5 @@
+// for texture, see
+//  ApiDemos/src/com/example/android/apis/graphics/GLES20Activity.java
 /*
  * Copyright (C) 2011 The Android Open Source Project
  *

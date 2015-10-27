@@ -46,6 +46,31 @@ public class MyGLSurfaceView extends GLSurfaceView {
     private float mPreviousX;
     private float mPreviousY;
 
+//// from ApiDemos/src/com/example/android/apis/graphics/TouchRotateActivity.java
+    private final float TRACKBALL_SCALE_FACTOR = 36.0f;
+    @Override public boolean onTrackballEvent(MotionEvent e) {
+        mRenderer.mAngleX += e.getX() * TRACKBALL_SCALE_FACTOR;
+        mRenderer.mAngleY += e.getY() * TRACKBALL_SCALE_FACTOR;
+        requestRender();
+        return true;
+    }
+
+    @Override public boolean onTouchEvent(MotionEvent e) {
+        float x = e.getX();
+        float y = e.getY();
+        switch (e.getAction()) {
+        case MotionEvent.ACTION_MOVE:
+            float dx = x - mPreviousX;
+            float dy = y - mPreviousY;
+            mRenderer.mAngleX += dx * TOUCH_SCALE_FACTOR;
+            mRenderer.mAngleY += dy * TOUCH_SCALE_FACTOR;
+            requestRender();
+        }
+        mPreviousX = x;
+        mPreviousY = y;
+        return true;
+    }
+/*
     @Override
     public boolean onTouchEvent(MotionEvent e) {
         // MotionEvent reports input details from the touch screen
@@ -81,5 +106,5 @@ public class MyGLSurfaceView extends GLSurfaceView {
         mPreviousY = y;
         return true;
     }
-
+ */
 }

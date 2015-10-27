@@ -23,7 +23,7 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
 
-////import android.os.SystemClock;
+import android.os.SystemClock;
 
 /**
  * Provides drawing instructions for a GLSurfaceView object. This class
@@ -47,6 +47,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private final float[] mRotationMatrix = new float[16];
 
     private float mAngle;
+    public float mAngleX;
+    public float mAngleY;
 
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
@@ -56,6 +58,11 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         mTriangle = new Triangle();
         mSquare   = new Square();
+        GLES20.glEnable(GLES20.GL_CULL_FACE);
+//      GLES20.glFrontFace(GLES20.GL_CCW);
+//      GLES20.glFrontFace(GLES20.GL_CW);
+        GLES20.glCullFace(GLES20.GL_FRONT);
+//      GLES20.glCullFace(GLES20.GL_BACK);
     }
 
     @Override
@@ -66,13 +73,19 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+////    Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(
+            mViewMatrix, 0,     // matrix, offset
+            0, 0, +3,           // (eyeX, eyeY, eyeZ)
+            0f, 0f, 0f,         // (centerX, centerY, centerZ)
+            0f, 1.0f, 0.0f      // (upX, upY, upZ)
+        );
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
         // Draw square
-        mSquare.draw(mMVPMatrix);
+//      mSquare.draw(mMVPMatrix);
 
         // Create a rotation for the triangle
 
@@ -81,18 +94,46 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // long time = SystemClock.uptimeMillis() % 4000L;
         // float angle = 0.090f * ((int) time);
 
-////    long time = SystemClock.uptimeMillis() % 4000L;
-////    float angle = 0.090f * ((int) time);
-////    mAngle = angle;
+        long time = SystemClock.uptimeMillis() % 4000L;
+        float angle = 0.090f * ((int) time);
+//// to use angle, turn off GLSurfaceView.RENDERMODE_WHEN_DIRTY in MyGLSurfaceView
+/*
         Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
 
         // Combine the rotation matrix with the projection and camera view
         // Note that the mMVPMatrix factor *must be first* in order
         // for the matrix multiplication product to be correct.
         Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mRotationMatrix, 0);
+ */
+        float[] mRX = new float[16];
+        Matrix.setRotateM(mRX, 0, mAngleX, 0.0f, 1.0f, 0.0f);
+        printMatrix(mRX, "mRX");
+        float[] mRY = new float[16];
+        Matrix.setRotateM(mRY, 0, mAngleY, 1.0f, 0.0f, 0.0f);
+        printMatrix(mRY, "mRY");
+        float[] mR = new float[16];
+        Matrix.multiplyMM(mR, 0, mRY, 0, mRX, 0);
+        printMatrix(mR, "mR = mRY x mRX");
+//      float[] mR2 = new float[16];
+//      Matrix.setRotateEulerM(mR2, 0, mAngleX, mAngleY, 0);
+//      printMatrix(mR2, "mR2");
+        float[] mT = new float[16];
+        Matrix.setIdentityM(mT, 0);
+        Matrix.translateM(mT, 0, 0.5f, 0.0f, -2.5f);
+        printMatrix(mT, "mT");
+        float[] m = new float[16];
+        Matrix.multiplyMM(m, 0, mT, 0, mR, 0);  // mT x mR; rotation first
+        Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, m, 0);
 
         // Draw triangle
         mTriangle.draw(scratch);
+    }
+    static void printMatrix(float[] m, String name)
+    {
+        Log.d(TAG, name);
+        for (int i = 0; i < 4; ++i) {
+            Log.d(TAG, String.format("%.3f %.3f %.3f %.3f", m[4 * i + 0], m[4 * i + 1], m[4 * i + 2], m[4 * i + 3]));
+        }
     }
 
     @Override
@@ -105,8 +146,13 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
-        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
-
+////    Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+        Matrix.frustumM(
+            mProjectionMatrix, 0,
+            -ratio, ratio,          // left, right
+            -1, 1,                  // bottom, top
+            3, 7                    // near, far
+        );
     }
 
     /**
