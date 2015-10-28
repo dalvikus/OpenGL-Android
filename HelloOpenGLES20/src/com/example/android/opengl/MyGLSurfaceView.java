@@ -34,8 +34,10 @@ public class MyGLSurfaceView extends GLSurfaceView {
         // Create an OpenGL ES 2.0 context.
         setEGLContextClientVersion(2);
 
+        Model model = new Model(context);
+
         // Set the Renderer for drawing on the GLSurfaceView
-        mRenderer = new MyGLRenderer();
+        mRenderer = new MyGLRenderer(model);
         setRenderer(mRenderer);
 
         // Render the view only when there is a change in the drawing data

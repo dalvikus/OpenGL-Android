@@ -34,9 +34,16 @@ import android.os.SystemClock;
  *   <li>{@link android.opengl.GLSurfaceView.Renderer#onSurfaceChanged}</li>
  * </ul>
  */
-public class MyGLRenderer implements GLSurfaceView.Renderer {
-
+public class MyGLRenderer implements GLSurfaceView.Renderer
+{
     private static final String TAG = "MyGLRenderer";
+
+    private final Model mModel;
+    MyGLRenderer(Model model)
+    {
+        mModel = model;
+    }
+
     private Triangle mTriangle;
     private Square   mSquare;
 
@@ -56,11 +63,21 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private Square mSquare5;
     private Square mSquare6;
 
+    private Polygon mChips1;
+    private Polygon mChips2;
+    private Polygon mChips3;
+    private Polygon mChips4;
+    private Polygon mChips5;
+    private Polygon mChips6;
+    private Polygon mChips7;
+    private Polygon mChips8;
+
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 
         // Set the background frame color
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        GLES20.glClearColor(0.2f, 0.709803922f, 0.898039216f, 1.0f);
 
         mTriangle = new Triangle();
         mSquare   = new Square();
@@ -119,6 +136,17 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         };
         float[] color6 = {1.0f, 0.0f, 1.0f, 1.0f};
         mSquare6 = new Square(squareCoords6, color6);
+
+        mChips1 = new Polygon(mModel.va, color1, mModel.ia1);
+        mChips2 = new Polygon(mModel.va, color2, mModel.ia2);
+        mChips3 = new Polygon(mModel.va, color3, mModel.ia3);
+        mChips4 = new Polygon(mModel.va, color4, mModel.ia4);
+        mChips5 = new Polygon(mModel.va, color5, mModel.ia5);
+        mChips6 = new Polygon(mModel.va, color6, mModel.ia6);
+        float[] color7 = {0.0f, 0.0f, 0.0f, 1.0f};
+        mChips7 = new Polygon(mModel.va, color7, mModel.ia7);
+        float[] color8 = {1.0f, 1.0f, 1.0f, 1.0f};
+        mChips8 = new Polygon(mModel.va, color8, mModel.ia8);
 
         GLES20.glEnable(GLES20.GL_CULL_FACE);
 //      GLES20.glFrontFace(GLES20.GL_CCW);
@@ -191,12 +219,22 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         // Draw triangle
 ////    mTriangle.draw(scratch);
+/*
         mSquare1.draw(scratch);
         mSquare2.draw(scratch);
         mSquare3.draw(scratch);
         mSquare4.draw(scratch);
         mSquare5.draw(scratch);
         mSquare6.draw(scratch);
+ */
+        mChips1.draw(scratch);
+        mChips2.draw(scratch);
+        mChips3.draw(scratch);
+        mChips4.draw(scratch);
+        mChips5.draw(scratch);
+        mChips6.draw(scratch);
+        mChips7.draw(scratch);
+        mChips8.draw(scratch);
     }
     static void printMatrix(float[] m, String name)
     {
