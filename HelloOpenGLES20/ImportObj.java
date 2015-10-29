@@ -11,10 +11,10 @@ import java.util.HashMap;
 import java.io.ObjectOutputStream;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
+import java.util.zip.GZIPOutputStream;
 import java.io.ObjectInputStream;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.util.zip.GZIPOutputStream;
 import java.util.zip.GZIPInputStream;
 
 class ImportObj
@@ -66,9 +66,7 @@ class ImportObj
             VertexArray vn_a = new VertexArray();
             IndexArray f_a = new IndexArray();
             while (true) {
-                if (!incomplete) {
-                    line = br.readLine();
-                }
+                line = br.readLine();
                 if (line == null)
                     break;
                 else
@@ -87,7 +85,7 @@ class ImportObj
                     continue;
                 incomplete = sa[sa.length - 1].equals("\\");
                 if (incomplete) {
-                    assert c.equals("v") || c.equals("vt") || c.equals("vn") : String.format("command: |%s|: incomplete: valid commands for incomplete are |v|, |vt|, |vn|", c);
+                    assert c.equals("f") || c.equals("v") || c.equals("vt") || c.equals("vn") : String.format("|%s|: command: |%s|: incomplete: valid commands for incomplete are |f|, |v|, |vt|, |vn|", line, c);
                 }
                 if (c.equals("g")) {
                     if (group != null) {
@@ -106,18 +104,19 @@ class ImportObj
                     f_a.clear();
                     continue;
                 }
+                assert c.equals("f") || c.equals("v") || c.equals("vt") || c.equals("vn") : String.format("|%s|: command: |%s|: invalid commands", line, c);
+                List<int[]> ial = null;
+                List<StringValue> svl = null;
                 if (c.equals("f")) {
-                    List<int[]> ial = ImportObj.getIndices(sa);
+                    ial = ImportObj.getIndices(sa, 1, sa.length - (incomplete ? 2 : 1));
                     assert ial != null && (ial.size() == 3 || ial.size() == 4) : String.format("invalid |f| command: |%s|", line);
-                    f_a.add(ial);
-                    continue;
+                } else {
+                    svl = ImportObj.getNumbers(sa, 1, sa.length - (incomplete ? 2 : 1));
+                    assert svl != null : String.format("|%s|: not all numbers", line);
                 }
-                assert c.equals("v") || c.equals("vt") || c.equals("vn") : String.format("command: |%s|: invalid commands", c);
-                List<StringValue> svl = ImportObj.getNumbers(sa, 1, sa.length - (incomplete ? 2 : 1));
-                assert svl != null : String.format("|%s|: not all numbers", line);
                 while (incomplete) {
                     line = br.readLine(); ++nLine;
-                    assert line != null : "FATAL: file ends with incomplete";
+                    assert line != null : String.format("FATAL: |%s|: file ends with incomplete", line);
                     // trim
                     line = line.trim();
                     if (line.isEmpty())
@@ -126,15 +125,28 @@ class ImportObj
                     if (sa[0].startsWith("#"))  // comment
                         continue;
                     incomplete = sa[sa.length - 1].equals("\\");
-                    List<StringValue> svl1 = ImportObj.getNumbers(sa, 0, sa.length - (incomplete ? 2 : 1));
-                    assert svl1 != null : String.format("|%s|: not all numbers", line);
-                    for (StringValue sv: svl1)
-                        svl.add(sv);
+                    if (c.equals("f")) {
+                        List<int[]> ial1 = ImportObj.getIndices(sa, 0, sa.length - (incomplete ? 2 : 1));
+                        assert ial1 != null : String.format("invalid |f| command: |%s|", line);
+                        for (int[] ia: ial1)
+                            ial.add(ia);
+                    } else {
+                        List<StringValue> svl1 = ImportObj.getNumbers(sa, 0, sa.length - (incomplete ? 2 : 1));
+                        assert svl1 != null : String.format("|%s|: not all numbers", line);
+                        for (StringValue sv: svl1)
+                            svl.add(sv);
+                    }
                 }
+                if (c.equals("f")) {
+                    assert ial != null && (ial.size() == 3 || ial.size() == 4) : String.format("|%s|: invalid |f| command", line);
+                    f_a.add(ial);
+                    continue;
+                }
+                assert svl != null : String.format("|%s|: invalid |%s| command", line, c);
                 if (c.equals("v") || c.equals("vn"))
-                    assert svl.size() == 3 : "not exact three values for |v| or |vn|";
+                    assert svl.size() == 3 : String.format("|%s|: not exact three values for |v| or |vn|", line);
                 else    // "vt"
-                    assert svl.size() == 2 : "not exact two values for |vt|";
+                    assert svl.size() == 2 : String.format("|%s|: not exact two values for |vt|", line);
                 if (c.equals("v")) {
                     v_a.add(svl);
                 } else if (c.equals("vt")) {
@@ -164,14 +176,12 @@ class ImportObj
         }
         return gl;
     }
-    private static List<int[]> getIndices(String[] sa)
+    private static List<int[]> getIndices(String[] sa, int startIndex, int endIndex)
     {
         if (sa == null)
             return null;
-        if (sa.length < 1 + 3)  // 1: skip command 'f', 3: at least three faces
-            return null;
         List<int[]> ial = new ArrayList<int[]>();
-        for (int i = 1; i < sa.length; ++i) {
+        for (int i = startIndex; i <= endIndex; ++i) {
             // valid formats:
             //  vi   face index only
             //  v1/vt1  face and texture indices
@@ -246,10 +256,16 @@ class ImportObj
             nvta += vt_a.size();
             nvna += vn_a.size();
         }
+        int f3 = 0;
+        int f4 = 0;
         for (Group g: gl) {
             Map<String, ArrayInterface> map = g.map;
             IndexArray f_a = (IndexArray) map.get("f");
             for (List<int[]> ial: f_a) {
+                if (ial.size() == 3)
+                    ++f3;
+                else
+                    ++f4;
                 for (int[] ia: ial) {
                     int iv = ia[0];
                     int ivt = ia[1];
@@ -260,6 +276,7 @@ class ImportObj
                 }
             }
         }
+        System.out.printf("# of triangles = %d, # of quadrilateral = %d%n", f3, f4);
     }
     private static void rebuildObj(List<Group> gl, boolean useFloat)
     {
@@ -463,8 +480,8 @@ class ImportObj
 //      ImportObj.rebuildObj(gl, false);
         Info info = ImportObj.calculateScaleAndCenter(gl);
         ImportObj.fitToCube(gl, info);
-        ImportObj.export(gl, args[0]);
 //      ImportObj.calculateScaleAndCenter(gl);
-//      ImportObj.rebuildObj(gl, true);
+////    ImportObj.rebuildObj(gl, true);
+        ImportObj.export(gl, args[0]);
     }
 }
