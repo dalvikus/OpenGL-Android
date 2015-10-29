@@ -25,6 +25,7 @@ import android.util.Log;
 
 import android.os.SystemClock;
 
+import android.content.Context;
 /**
  * Provides drawing instructions for a GLSurfaceView object. This class
  * must override the OpenGL ES drawing lifecycle methods:
@@ -38,10 +39,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer
 {
     private static final String TAG = "MyGLRenderer";
 
-    private final Model mModel;
-    MyGLRenderer(Model model)
+    private final Context mContext;
+    MyGLRenderer(Context context)
     {
-        mModel = model;
+        mContext = context;
     }
 
     private Triangle mTriangle;
@@ -56,103 +57,32 @@ public class MyGLRenderer implements GLSurfaceView.Renderer
     private float mAngle;
     public float mAngleX;
     public float mAngleY;
-    private Square mSquare1;
-    private Square mSquare2;
-    private Square mSquare3;
-    private Square mSquare4;
-    private Square mSquare5;
-    private Square mSquare6;
 
-    private Polygon mChips1;
-    private Polygon mChips2;
-    private Polygon mChips3;
-    private Polygon mChips4;
-    private Polygon mChips5;
-    private Polygon mChips6;
-    private Polygon mChips7;
-    private Polygon mChips8;
+    private Cube mCube;
+    private Polygon mChips;
 
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 
         // Set the background frame color
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         GLES20.glClearColor(0.2f, 0.709803922f, 0.898039216f, 1.0f);
-
-        mTriangle = new Triangle();
-        mSquare   = new Square();
-
-        // front
-        float[] squareCoords1 = {
-            -0.5f,  0.5f, 0.5f,   // top left
-            -0.5f, -0.5f, 0.5f,   // bottom left
-             0.5f, -0.5f, 0.5f,   // bottom right
-             0.5f,  0.5f, 0.5f    // top right
-        };
-        float[] color1 = {1.0f, 0.0f, 0.0f, 1.0f};
-        mSquare1 = new Square(squareCoords1, color1);
-        // back
-        float[] squareCoords2 = {
-             0.5f,  0.5f, -0.5f,   // top left
-             0.5f, -0.5f, -0.5f,   // bottom left
-            -0.5f, -0.5f, -0.5f,   // bottom right
-            -0.5f,  0.5f, -0.5f    // top right
-        };
-        float[] color2 = {1.0f, 1.0f, 0.0f, 1.0f};
-        mSquare2 = new Square(squareCoords2, color2);
-        // left
-        float[] squareCoords3 = {
-            -0.5f,  0.5f, -0.5f,   // top left
-            -0.5f, -0.5f, -0.5f,   // bottom left
-            -0.5f, -0.5f,  0.5f,   // bottom right
-            -0.5f,  0.5f,  0.5f    // top right
-        };
-        float[] color3 = {0.0f, 1.0f, 0.0f, 1.0f};
-        mSquare3 = new Square(squareCoords3, color3);
-        // right
-        float[] squareCoords4 = {
-             0.5f,  0.5f,  0.5f,   // top left
-             0.5f, -0.5f,  0.5f,   // bottom left
-             0.5f, -0.5f, -0.5f,   // bottom right
-             0.5f,  0.5f, -0.5f    // top right
-        };
-        float[] color4 = {0.0f, 1.0f, 1.0f, 1.0f};
-        mSquare4 = new Square(squareCoords4, color4);
-        // top
-        float[] squareCoords5 = {
-            -0.5f,  0.5f, -0.5f,   // top left
-            -0.5f,  0.5f,  0.5f,   // bottom left
-             0.5f,  0.5f,  0.5f,   // bottom right
-             0.5f,  0.5f, -0.5f    // top right
-        };
-        float[] color5 = {0.0f, 0.0f, 1.0f, 1.0f};
-        mSquare5 = new Square(squareCoords5, color5);
-        // bottom
-        float[] squareCoords6 = {
-            -0.5f, -0.5f,  0.5f,   // top left
-            -0.5f, -0.5f, -0.5f,   // bottom left
-             0.5f, -0.5f, -0.5f,   // bottom right
-             0.5f, -0.5f,  0.5f    // top right
-        };
-        float[] color6 = {1.0f, 0.0f, 1.0f, 1.0f};
-        mSquare6 = new Square(squareCoords6, color6);
-
-        mChips1 = new Polygon(mModel.va, color1, mModel.ia1);
-        mChips2 = new Polygon(mModel.va, color2, mModel.ia2);
-        mChips3 = new Polygon(mModel.va, color3, mModel.ia3);
-        mChips4 = new Polygon(mModel.va, color4, mModel.ia4);
-        mChips5 = new Polygon(mModel.va, color5, mModel.ia5);
-        mChips6 = new Polygon(mModel.va, color6, mModel.ia6);
-        float[] color7 = {0.0f, 0.0f, 0.0f, 1.0f};
-        mChips7 = new Polygon(mModel.va, color7, mModel.ia7);
-        float[] color8 = {1.0f, 1.0f, 1.0f, 1.0f};
-        mChips8 = new Polygon(mModel.va, color8, mModel.ia8);
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
         GLES20.glEnable(GLES20.GL_CULL_FACE);
 //      GLES20.glFrontFace(GLES20.GL_CCW);
 //      GLES20.glFrontFace(GLES20.GL_CW);
 //      GLES20.glCullFace(GLES20.GL_FRONT);
         GLES20.glCullFace(GLES20.GL_BACK);
+
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+        GLES20.glDepthFunc(GLES20.GL_LEQUAL);
+        GLES20.glDepthMask(true);
+
+        mTriangle = new Triangle();
+        mSquare   = new Square();
+
+        mCube = new Cube();
+        mChips = new Polygon(mContext, "Chips.obj");
     }
 
     @Override
@@ -218,23 +148,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer
         Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, m, 0);
 
         // Draw triangle
-////    mTriangle.draw(scratch);
-/*
-        mSquare1.draw(scratch);
-        mSquare2.draw(scratch);
-        mSquare3.draw(scratch);
-        mSquare4.draw(scratch);
-        mSquare5.draw(scratch);
-        mSquare6.draw(scratch);
- */
-        mChips1.draw(scratch);
-        mChips2.draw(scratch);
-        mChips3.draw(scratch);
-        mChips4.draw(scratch);
-        mChips5.draw(scratch);
-        mChips6.draw(scratch);
-        mChips7.draw(scratch);
-        mChips8.draw(scratch);
+        mTriangle.draw(scratch);
+//      mSquare.draw(scratch);
+//      mCube.draw(scratch);
+//      mChips.drawAll(scratch);
     }
     static void printMatrix(float[] m, String name)
     {
@@ -244,8 +161,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer
         }
     }
 
+
     @Override
-    public void onSurfaceChanged(GL10 unused, int width, int height) {
+    public void onSurfaceChanged(GL10 unused, int width, int height)
+    {
         // Adjust the viewport based on geometry changes,
         // such as screen rotation
         GLES20.glViewport(0, 0, width, height);
@@ -273,7 +192,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer
      * @param shaderCode - String containing the shader code.
      * @return - Returns an id for the shader.
      */
-    public static int loadShader(int type, String shaderCode){
+    public static int loadShader(int type, String shaderCode)
+    {
 
         // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
         // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
@@ -298,7 +218,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer
     *
     * @param glOperation - Name of the OpenGL call to check.
     */
-    public static void checkGlError(String glOperation) {
+    public static void checkGlError(String glOperation)
+    {
         int error;
         while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
             Log.e(TAG, glOperation + ": glError " + error);
@@ -321,5 +242,4 @@ public class MyGLRenderer implements GLSurfaceView.Renderer
     public void setAngle(float angle) {
         mAngle = angle;
     }
-
 }
