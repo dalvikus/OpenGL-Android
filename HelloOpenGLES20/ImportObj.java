@@ -245,16 +245,13 @@ class ImportObj
     static private void checkIndices(List<Group> gl)
     {
         int nva = 0;
-        int nvta = 0;
-        int nvna = 0;
         for (Group g: gl) {
             Map<String, ArrayInterface> map = g.map;
             VertexArray v_a = (VertexArray) map.get("v");
             VertexArray vt_a = (VertexArray) map.get("vt");
             VertexArray vn_a = (VertexArray) map.get("vn");
+            assert v_a.size() == vt_a.size() && v_a.size() == vn_a.size() : String.format("|%s|: all not equal: (nva, nvta nvna): (%d, %d, %d)%n", g.name, v_a.size(), vt_a.size(), vn_a.size());
             nva += v_a.size();
-            nvta += vt_a.size();
-            nvna += vn_a.size();
         }
         int f3 = 0;
         int f4 = 0;
@@ -271,8 +268,8 @@ class ImportObj
                     int ivt = ia[1];
                     int ivn = ia[2];
                     assert iv > 0 && iv <= nva : String.format("iv: %d (nva: %d)", iv, nva);
-                    assert ivt >= 0 && ivt <= nvta : String.format("ivt: %d (nvta: %d)", ivt, nvta);
-                    assert ivn >= 0 && ivn <= nvna : String.format("ivn: %d (nvna: %d)", ivn, nvna);
+                    assert ivt >= 0 && ivt <= nva : String.format("ivt: %d (nva: %d)", ivt, nva);
+                    assert ivn >= 0 && ivn <= nva : String.format("ivn: %d (nva: %d)", ivn, nva);
                 }
             }
         }
@@ -388,13 +385,29 @@ class ImportObj
             }
         }
     }
-    private static void export(List<Group> gl, String objFile)
+
+    /**
+boolean: has texture
+boolean: has normal 
+float[]: # of vertices = length / (3 if position + 2 if texture + 3 if normal)
+int: number of groups
+while
+    name for group
+    int[]: indices for faces in group
+     */
+    private static final int EXPORT_TEXTURE = 2;
+    private static final int EXPORT_NORMAL = 4;
+    private static void export(List<Group> gl, String objFile, int exportFlag)
     {
         final String oviaFile = objFile + "_ovia.gz";
         try {
             ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(oviaFile))));
-            float[] va3 = (float[]) ois.readObject();
-            System.out.println("IN: # of floats = " + va3.length);
+            boolean hasTexture = ois.readBoolean();
+            System.out.printf("Has Texture? %s%n", hasTexture ? "True" : "False");
+            boolean hasNormal = ois.readBoolean();
+            System.out.printf("Has Normal? %s%n", hasNormal ? "True" : "False");
+            float[] fa = (float[]) ois.readObject();
+            System.out.println("IN: # of floats = " + fa.length);
             int k = ois.readInt();
             System.out.println("IN: # of groups = " + k);
             for (int i = 0; i < k; ++i) {
@@ -410,31 +423,63 @@ class ImportObj
             System.err.println(e.getMessage());
         }
 
+        boolean exportTexture = (exportFlag & EXPORT_TEXTURE) != 0;
+        boolean exportNormal = (exportFlag & EXPORT_NORMAL) != 0;
         try {
             ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(oviaFile))));
 
-            int nv3 = 0;
+            int nva = 0;
             for (Group g: gl) {
                 Map<String, ArrayInterface> map = g.map;
                 VertexArray v_a = (VertexArray) map.get("v");
-                nv3 += 3 * v_a.size();
+                VertexArray vt_a = (VertexArray) map.get("vt");
+                VertexArray vn_a = (VertexArray) map.get("vn");
+                assert v_a.size() == vt_a.size() && v_a.size() == vn_a.size() : String.format("|%s|: all not equal: (nva, nvta nvna): (%d, %d, %d)%n", g.name, v_a.size(), vt_a.size(), vn_a.size());
+                nva += v_a.size();
             }
-            float[] va3 = new float[nv3];
-            int i = 0;
+            oos.writeBoolean(exportTexture);
+            oos.writeBoolean(exportNormal);
+            int n = 3;
+            if (exportTexture)
+                n += 2;
+            if (exportNormal)
+                n += 3;
+            int nf = n * nva;
+            float[] fa = new float[nf];
+            int idx = 0;
             for (Group g: gl) {
                 Map<String, ArrayInterface> map = g.map;
                 VertexArray v_a = (VertexArray) map.get("v");
-                for (List<StringValue> svl: v_a) {
-                    StringValue sv1 = svl.get(0);
-                    StringValue sv2 = svl.get(1);
-                    StringValue sv3 = svl.get(2);
-                    va3[i++] = sv1.f;
-                    va3[i++] = sv2.f;
-                    va3[i++] = sv3.f;
+                VertexArray vt_a = (VertexArray) map.get("vt");
+                VertexArray vn_a = (VertexArray) map.get("vn");
+                for (int i = 0; i < v_a.size(); ++i) {
+                    List<StringValue> svlv = v_a.get(i);
+                    StringValue sv1 = svlv.get(0);
+                    StringValue sv2 = svlv.get(1);
+                    StringValue sv3 = svlv.get(2);
+                    fa[idx++] = sv1.f;
+                    fa[idx++] = sv2.f;
+                    fa[idx++] = sv3.f;
+                    if (exportTexture) {
+                        List<StringValue> svlvt = vt_a.get(i);
+                        StringValue svt1 = svlvt.get(0);
+                        StringValue svt2 = svlvt.get(1);
+                        fa[idx++] = svt1.f;
+                        fa[idx++] = svt2.f;
+                    }
+                    if (exportNormal) {
+                        List<StringValue> svlvn = vn_a.get(i);
+                        StringValue svn1 = svlvn.get(0);
+                        StringValue svn2 = svlvn.get(1);
+                        StringValue svn3 = svlvn.get(2);
+                        fa[idx++] = svn1.f;
+                        fa[idx++] = svn2.f;
+                        fa[idx++] = svn3.f;
+                    }
                 }
             }
-            System.out.println("OUT: # of floats = " + nv3);
-            oos.writeObject(va3);
+            System.out.println("OUT: # of floats = " + nf);
+            oos.writeObject(fa);
             oos.writeInt(gl.size());
 /*
         for (float f: va3)
@@ -482,6 +527,6 @@ class ImportObj
         ImportObj.fitToCube(gl, info);
 //      ImportObj.calculateScaleAndCenter(gl);
 ////    ImportObj.rebuildObj(gl, true);
-        ImportObj.export(gl, args[0]);
+        ImportObj.export(gl, args[0], EXPORT_TEXTURE | EXPORT_NORMAL);
     }
 }

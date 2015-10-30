@@ -50,6 +50,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer
 
     // mMVPMatrix is an abbreviation for "Model View Projection Matrix"
     private final float[] mMVPMatrix = new float[16];
+    private final float[] mMVMatrix = new float[16];
     private final float[] mProjectionMatrix = new float[16];
     private final float[] mViewMatrix = new float[16];
     private final float[] mRotationMatrix = new float[16];
@@ -82,7 +83,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer
         mSquare   = new Square();
 
         mCube = new Cube();
-        mChips = new Polygon(mContext, "Chips.obj");
+        mChips = new Polygon(mContext, "Chips");
     }
 
     @Override
@@ -147,11 +148,12 @@ public class MyGLRenderer implements GLSurfaceView.Renderer
         Matrix.multiplyMM(m, 0, mT, 0, mR, 0);  // mT x mR; rotation first
         Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, m, 0);
 
+        Matrix.multiplyMM(mMVMatrix, 0, mViewMatrix, 0, m, 0);
         // Draw triangle
-        mTriangle.draw(scratch);
+//      mTriangle.draw(scratch);
 //      mSquare.draw(scratch);
 //      mCube.draw(scratch);
-//      mChips.drawAll(scratch);
+        mChips.drawAll(scratch, mMVMatrix);
     }
     static void printMatrix(float[] m, String name)
     {
